@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frendzy Farmers - Order Inbox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { farmgreen: '#16a34a', farmyellow: '#f59e0b', machblue: '#0284c7' } } } }
+    </script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <div class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-2xl relative pb-16 overflow-hidden flex flex-col justify-between">
+        
+        <!-- Header -->
+        <header class="bg-farmgreen text-white p-4 rounded-b-3xl shadow-md flex justify-between items-center sticky top-0 z-40">
+            <div class="flex items-center gap-3">
+                <button onclick="window.location.href='farmer-dashboard.html'" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-xl transition">
+                    <i class="fas fa-arrow-left text-xs"></i>
+                </button>
+                <div>
+                    <h2 class="font-bold text-base"><i class="fas fa-inbox mr-1.5"></i>Order Inbox</h2>
+                    <p class="text-green-100 text-[10px]">Manage incoming buyer requests</p>
+                </div>
+            </div>
+            <!-- 🌐 Language Switcher -->
+            <select id="langSwitcher" onchange="changeLanguage(this.value)" class="bg-white/20 text-white border border-white/30 rounded-lg px-2 py-1 text-xs font-bold outline-none cursor-pointer">
+                <option value="en" class="text-gray-900">EN</option>
+                <option value="hi" class="text-gray-900">HI</option>
+                <option value="kn" class="text-gray-900">KN</option>
+            </select>
+        </header>
+
+        <!-- Main Content Container -->
+        <div class="p-4 space-y-4">
+            
+            <div class="flex justify-between items-center bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100">
+                <div>
+                    <h3 class="font-extrabold text-xs text-gray-900 uppercase">Pending Buyer Orders</h3>
+                    <p id="orderCount" class="text-[10px] text-gray-400">Loading orders...</p>
+                </div>
+                <button onclick="loadFarmerOrders()" class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-2 rounded-xl hover:bg-blue-100 transition">
+                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Orders Container -->
+            <div id="orderInbox" class="space-y-3">
+                <p class="text-xs text-gray-400 italic text-center py-8 bg-white rounded-3xl border border-gray-100">Loading pending requests...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Application Config & Logic -->
+    <script src="./config.js"></script>
+    <script>
+        const translations = {
+            en: { title: "Order Inbox" },
+            hi: { title: "ऑर्डर इनबॉक्स" },
+            kn: { title: "ಆರ್ಡರ್ ಇನ್‌ಬಾಕ್ಸ್" }
+        };
+
+        function changeLanguage(langCode) {
+            localStorage.setItem('frendzy_lang', langCode);
+            if(document.getElementById('langSwitcher')) document.getElementById('langSwitcher').value = langCode;
+        }
+        document.addEventListener("DOMContentLoaded", () => { 
+            changeLanguage(localStorage.getItem('frendzy_lang') || 'en'); 
+            loadFarmerOrders();
+        });
+
+        let currentUser = JSON.parse(localStorage.getItem('frendzy_user') || 'null');
+        if (!currentUser || currentUser.role !== 'FARMER') {
+            window.location.href = 'farmer-dashboard.html';
+        }
+
+        async function loadFarmerOrders() {
+            const inbox = document.getElementById('orderInbox');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/orders/pending`);
+                const orders = await res.json();
+                // Filter orders intended for this farmer's phone number
+                const myOrders = orders.filter(o => o.farmer_phone === currentUser.phone);
+                
+                document.getElementById('orderCount').innerText = `${myOrders.length} requests awaiting response`;
+
+                if(myOrders.length === 0) {
+                    inbox.innerHTML = `
+                        <div class="bg-blue-50 p-6 rounded-3xl text-center border border-blue-200">
+                            <p class="text-xs font-bold text-blue-900 mb-1">No pending orders right now.</p>
+                            <p class="text-[10px] text-blue-600">Incoming requests from buyers will appear here.</p>
+                        </div>`;
+                    return;
+                }
+
+                inbox.innerHTML = myOrders.map(o => `
+                    <div class="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">Pending Request</span>
+                                <h4 class="font-bold text-sm text-gray-900 mt-2">${o.crop_name || o.item_name || 'Produce'}</h4>
+                            </div>
+                            <span class="text-xs font-extrabold text-blue-600 bg-blue-50 px-3 py-1 rounded-xl">₹${o.total_price || (o.price_per_kg * o.quantity_kg) || 0}</span>
+                        </div>
+                        <div class="bg-gray-50 p-2.5 rounded-2xl text-[11px] text-gray-600 space-y-1">
+                            <p><i class="fas fa-weight-hanging text-gray-400 mr-1.5"></i> Quantity: <strong>${o.quantity_kg || o.quantity || 0} kg</strong></p>
+                            <p><i class="fas fa-phone text-gray-400 mr-1.5"></i> Buyer Phone: <strong>${o.buyer_phone || 'N/A'}</strong></p>
+                            <p><i class="fas fa-calendar-alt text-gray-400 mr-1.5"></i> Ordered On: ${new Date(o.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <button onclick="acceptOrder('${o._id}')" class="w-full bg-farmgreen text-white text-xs font-bold py-3 rounded-2xl shadow-sm hover:bg-green-700 transition flex items-center justify-center">
+                            <i class="fas fa-check-circle mr-1.5"></i> Accept Order
+                        </button>
+                    </div>`).join('');
+            } catch(e) {
+                inbox.innerHTML = `<p class="text-xs text-red-500 italic text-center py-6">Failed to load order inbox.</p>`;
+            }
+        }
+
+        async function acceptOrder(orderId) {
+            if(!confirm("Are you sure you want to accept this order?")) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/accept`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                if(res.ok) {
+                    alert("✅ Order accepted successfully!");
+                    loadFarmerOrders();
+                } else {
+                    alert("❌ Failed to accept order.");
+                }
+            } catch(e) {
+                alert("❌ Network error connecting to server.");
+            }
+        }
+    </script>
+</body>
+</html>
