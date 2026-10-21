@@ -231,6 +231,21 @@
             activateDashboard();
         }
 
+        // Toggle between Login and Register tabs
+        function switchAuthTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('tabLogin').className = "flex-1 py-2 text-sm font-bold bg-white text-farmgreen rounded-lg shadow-sm transition";
+                document.getElementById('tabSetup').className = "flex-1 py-2 text-sm font-bold text-gray-500 rounded-lg transition";
+                document.getElementById('loginForm').classList.replace('hidden', 'block');
+                document.getElementById('setupForm').classList.replace('block', 'hidden');
+            } else {
+                document.getElementById('tabSetup').className = "flex-1 py-2 text-sm font-bold bg-white text-farmgreen rounded-lg shadow-sm transition";
+                document.getElementById('tabLogin').className = "flex-1 py-2 text-sm font-bold text-gray-500 rounded-lg transition";
+                document.getElementById('setupForm').classList.replace('hidden', 'block');
+                document.getElementById('loginForm').classList.replace('block', 'hidden');
+            }
+        }
+
         function switchHubView(viewName) {
             const views = ['inventory', 'inbox', 'finder', 'supplier'];
             views.forEach(v => {
