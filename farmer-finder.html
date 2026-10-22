@@ -14,40 +14,39 @@
 
     <div class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-2xl relative pb-16 overflow-hidden flex flex-col justify-between">
         
-        <!-- Header -->
-        <header class="bg-farmgreen text-white p-4 rounded-b-3xl shadow-md flex justify-between items-center sticky top-0 z-40">
-            <div class="flex items-center gap-3">
-                <button onclick="window.location.href='farmer-dashboard.html'" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-xl transition">
-                    <i class="fas fa-arrow-left text-xs"></i>
-                </button>
-                <div>
-                    <h2 class="font-bold text-base"><i class="fas fa-map-marked-alt mr-1.5"></i>Smart Store Finder</h2>
-                    <p class="text-green-100 text-[10px]">Compare local supplier prices & distances</p>
+        <!-- Header with Integrated Action Box -->
+        <header class="bg-farmgreen text-white p-4 pb-6 rounded-b-3xl shadow-md sticky top-0 z-40 space-y-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <button onclick="window.location.href='farmer-dashboard.html'" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-xl transition">
+                        <i class="fas fa-arrow-left text-xs"></i>
+                    </button>
+                    <div>
+                        <h2 class="font-bold text-base"><i class="fas fa-map-marked-alt mr-1.5"></i>Smart Store Finder</h2>
+                        <p class="text-green-100 text-[10px]">Compare local supplier prices</p>
+                    </div>
                 </div>
+                <select id="langSwitcher" onchange="changeLanguage(this.value)" class="bg-white/20 text-white border border-white/30 rounded-lg px-2 py-1 text-xs font-bold outline-none cursor-pointer">
+                    <option value="en" class="text-gray-900">EN</option>
+                    <option value="hi" class="text-gray-900">HI</option>
+                    <option value="kn" class="text-gray-900">KN</option>
+                </select>
             </div>
-            <!-- 🌐 Language Switcher -->
-            <select id="langSwitcher" onchange="changeLanguage(this.value)" class="bg-white/20 text-white border border-white/30 rounded-lg px-2 py-1 text-xs font-bold outline-none cursor-pointer">
-                <option value="en" class="text-gray-900">EN</option>
-                <option value="hi" class="text-gray-900">HI</option>
-                <option value="kn" class="text-gray-900">KN</option>
-            </select>
-        </header>
 
-        <!-- Main Content Container -->
-        <div class="p-4 space-y-4">
-            
-            <!-- Search & Filter Bar -->
-            <div class="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 space-y-3">
-                <h3 class="font-extrabold text-xs text-gray-900 uppercase">Search Inputs & Supplies</h3>
+            <!-- Integrated Header Action Bar -->
+            <div class="bg-white/15 border border-white/20 p-3 rounded-2xl backdrop-blur-sm space-y-2">
+                <h3 class="font-extrabold text-[11px] text-white uppercase tracking-wider">Search Inputs & Supplies</h3>
                 <div class="flex gap-2">
-                    <input type="text" id="compareQuery" placeholder="Search (e.g. Seeds, Urea, Pesticide)..." class="flex-1 border rounded-2xl p-3 text-xs bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500">
-                    <button onclick="compareSuppliers()" class="bg-indigo-600 text-white font-bold px-4 py-3 rounded-2xl text-xs shadow-sm hover:bg-indigo-700 transition">
+                    <input type="text" id="compareQuery" placeholder="Search (e.g. Seeds, Urea)..." class="flex-1 border-0 rounded-xl p-2.5 text-xs bg-white text-gray-800 outline-none shadow-sm">
+                    <button onclick="compareSuppliers()" class="bg-white text-farmgreen font-bold px-4 py-2.5 rounded-xl text-xs shadow-sm hover:bg-green-50 transition">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
             </div>
+        </header>
 
-            <!-- Comparison Results Container -->
+        <!-- Main Content Container pulled right up -->
+        <div class="p-4 -mt-2">
             <div id="comparisonResults" class="space-y-3">
                 <p class="text-xs text-gray-400 italic text-center py-8 bg-white rounded-3xl border border-gray-100">Enter an item to compare prices across local suppliers.</p>
             </div>
@@ -55,28 +54,13 @@
 
     </div>
 
-    <!-- Application Config & Logic -->
     <script src="./config.js"></script>
     <script>
-        const translations = {
-            en: { title: "Smart Store Finder" },
-            hi: { title: "स्मार्ट स्टोर फाइंडर" },
-            kn: { title: "ಸ್ಮಾರ್ಟ್ ಸ್ಟೋರ್ ಫೈಂಡರ್" }
-        };
-
-        function changeLanguage(langCode) {
-            localStorage.setItem('frendzy_lang', langCode);
-            if(document.getElementById('langSwitcher')) document.getElementById('langSwitcher').value = langCode;
-        }
-        document.addEventListener("DOMContentLoaded", () => { 
-            changeLanguage(localStorage.getItem('frendzy_lang') || 'en'); 
-            compareSuppliers(); // Load all items by default on open
-        });
+        function changeLanguage(langCode) { localStorage.setItem('frendzy_lang', langCode); }
+        document.addEventListener("DOMContentLoaded", () => { compareSuppliers(); });
 
         let currentUser = JSON.parse(localStorage.getItem('frendzy_user') || 'null');
-        if (!currentUser || currentUser.role !== 'FARMER') {
-            window.location.href = 'farmer-dashboard.html';
-        }
+        if (!currentUser || currentUser.role !== 'FARMER') { window.location.href = 'farmer-dashboard.html'; }
 
         async function compareSuppliers() {
             const query = (document.getElementById('compareQuery').value || "").toLowerCase().trim();
@@ -95,9 +79,9 @@
 
                 if (filtered.length === 0) {
                     resultsContainer.innerHTML = `
-                        <div class="bg-indigo-50 p-6 rounded-3xl text-center border border-indigo-200">
-                            <p class="text-xs font-bold text-indigo-900 mb-1">No matching inputs found.</p>
-                            <p class="text-[10px] text-indigo-600">Try searching for broader keywords like 'Seeds' or 'Fertilizer'.</p>
+                        <div class="bg-white p-6 rounded-3xl text-center border border-gray-100 shadow-sm">
+                            <p class="text-xs font-bold text-gray-800 mb-1">No matching inputs found.</p>
+                            <p class="text-[10px] text-gray-400">Try searching for broader keywords like 'Seeds' or 'Fertilizer'.</p>
                         </div>`;
                     return;
                 }
@@ -109,7 +93,7 @@
                             <div>
                                 <h4 class="font-bold text-xs text-gray-900">${item.product_name}</h4>
                                 <p class="text-[10px] text-gray-500"><i class="fas fa-store text-purple-600 mr-1"></i> ${item.supplier_name || 'Local Supplier'}</p>
-                                <p class="text-[10px] text-indigo-600 font-semibold mt-0.5"><i class="fas fa-map-marker-alt mr-1"></i> Available nearby</p>
+                                <p class="text-[10px] text-farmgreen font-semibold mt-0.5"><i class="fas fa-map-marker-alt mr-1"></i> Available nearby</p>
                             </div>
                         </div>
                         <div class="text-right">
@@ -118,7 +102,7 @@
                         </div>
                     </div>`).join('');
             } catch (e) {
-                resultsContainer.innerHTML = `<p class="text-xs text-red-500 italic text-center py-6">Failed to fetch store comparison data.</p>`;
+                resultsContainer.innerHTML = `<p class="text-xs text-red-500 italic text-center py-6">Failed to load store comparison data.</p>`;
             }
         }
     </script>
